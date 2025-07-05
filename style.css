@@ -54,7 +54,7 @@ nav a:hover {
     box-shadow: 0 4px 16px #2980b933;
 }
 main {
-    max-width: 780px;
+    max-width: 960px; /* Increased max-width to accommodate tables */
     margin: 2.5rem auto 2rem auto;
     background: rgba(255,255,255,0.97);
     border-radius: 18px;
@@ -122,4 +122,66 @@ footer {
     margin-top: 2rem;
     padding: 1rem 0;
     font-size: 0.95rem;
+}
+
+/* Styles for data lists */
+.data-list {
+    margin-top: 2rem;
+    overflow-x: auto; /* Add horizontal scroll for wide tables */
+}
+.data-list h3 {
+     color: #34495e;
+     margin-bottom: 1rem;
+}
+.data-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    min-width: 600px; /* Ensure minimum width for scroll */
+}
+.data-list th, .data-list td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    white-space: nowrap; /* Prevent text wrapping in cells */
+     max-width: 200px; /* Limit max width for text/json fields */
+     overflow: hidden;
+     text-overflow: ellipsis; /* Add ellipsis for overflow */
+}
+
+/* Style for JSON fields to allow wrapping */
+.data-list td:has(textarea[name="localisation"]),
+.data-list td:has(textarea[name="position"]) {
+    white-space: pre-wrap; /* Allow wrapping for textarea content */
+    max-width: 300px; /* Adjust max width for JSON fields */
+}
+
+
+.data-list th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+}
+
+/* Basic styles for action buttons in the list */
+.data-list td button {
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: normal; /* Adjust font weight for buttons */
+    transition: background-color 0.2s ease;
+     white-space: nowrap; /* Prevent button text wrapping */
+     max-width: none; /* Remove max-width constraint for buttons */
+     overflow: visible;
+     text-overflow: clip;
+}
+.data-list td button:last-child {
+    margin-right: 0;
+}
+.data-list td button:hover {
+    background-color: #1a5a85;
 }

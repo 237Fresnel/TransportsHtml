@@ -56,67 +56,24 @@ transportsHtml/
 - Par défaut, la connexion utilise :
   - utilisateur : `postgres`
   - mot de passe : `postgres`
-  - base : `transports`
+  - base : `trip`
   - port : `5432`
 - Modifiez ces paramètres dans `backend/server.js` si besoin.
 
-### 5. Création des tables (exemple SQL)
-Adaptez selon vos besoins :
-```sql
-CREATE TABLE villes (
-  id SERIAL PRIMARY KEY,
-  nom_ville VARCHAR(100),
-  region VARCHAR(100),
-  population INTEGER,
-  superficie_km2 NUMERIC
-);
+### 5. Ecriture dans la base de donnees psql (exemple SQL)
+le fichier test_data.sql contient des insertions d'elements de test pour les tables de la base de donnees.
+le fichier schema.sql contient la structure des tables de la base de donnees.
 
-CREATE TABLE projets (
-  id SERIAL PRIMARY KEY,
-  id_ville INTEGER,
-  nom_projet VARCHAR(100),
-  description TEXT,
-  date_debut DATE,
-  date_fin DATE
-);
+Pour créer la base de donnees et les tables, vous pouvez utiliser la commande suivante :
 
-CREATE TABLE donnees (
-  id SERIAL PRIMARY KEY,
-  id_ville INTEGER,
-  annee INTEGER,
-  population INTEGER,
-  pib NUMERIC,
-  taux_chomage NUMERIC
-);
+```bash
+psql -U postgres -d trip -f schema.sql
+```
 
-CREATE TABLE flotte (
-  id SERIAL PRIMARY KEY,
-  id_ville INTEGER,
-  type_vehicule VARCHAR(100),
-  nombre INTEGER,
-  annee INTEGER
-);
+Pour exécuter le fichier test_data.sql, vous pouvez utiliser la commande suivante :
 
-CREATE TABLE infrastructures (
-  id SERIAL PRIMARY KEY,
-  id_ville INTEGER,
-  type_infrastructure VARCHAR(100),
-  nom_infrastructure VARCHAR(100),
-  etat VARCHAR(50),
-  longueur_km NUMERIC,
-  date_construction DATE
-);
-
-CREATE TABLE accidents (
-  id SERIAL PRIMARY KEY,
-  id_ville INTEGER,
-  date_accident DATE,
-  nombre_vehicules_implique INTEGER,
-  nombre_blesses INTEGER,
-  nombre_morts INTEGER,
-  cause_probable VARCHAR(255),
-  lieu_accident VARCHAR(255)
-);
+```bash
+psql -U postgres -d trip -f test_data.sql
 ```
 
 ## Auteur
