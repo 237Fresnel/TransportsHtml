@@ -1,0 +1,125 @@
+body {
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+    min-height: 100vh;
+    margin: 0;
+    color: #24304a;
+    letter-spacing: 0.01em;
+    transition: background 0.5s;
+}
+header {
+    background: rgba(44, 62, 80, 0.92);
+    color: #fff;
+    padding: 1.3rem 0 0.7rem 0;
+    text-align: center;
+    box-shadow: 0 4px 16px #0002;
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+}
+header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2.3rem;
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+    letter-spacing: 0.02em;
+    font-weight: 700;
+    text-shadow: 0 2px 8px #0002;
+}
+nav ul {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+}
+nav li {
+    margin: 0;
+}
+nav a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.5rem 1.5rem;
+    border-radius: 16px 16px 0 0;
+    transition: background 0.25s, color 0.25s;
+    font-size: 1.08rem;
+    letter-spacing: 0.03em;
+    background: transparent;
+}
+nav a.active,
+nav a:hover {
+    background: linear-gradient(90deg, #2980b9 60%, #6dd5fa 100%);
+    color: #f3f7fa;
+    box-shadow: 0 4px 16px #2980b933;
+}
+main {
+    max-width: 780px;
+    margin: 2.5rem auto 2rem auto;
+    background: rgba(255,255,255,0.97);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px #6dd5fa22;
+    padding: 2.5rem 2.2rem 2rem 2.2rem;
+    font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.4s;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+h2 {
+    color: #2980b9;
+    margin-top: 0;
+}
+.data-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.data-form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+    color: #34495e;
+}
+.data-form input, .data-form textarea, .data-form select {
+    margin-top: 0.3rem;
+    padding: 0.6rem;
+    border-radius: 4px;
+    border: 1px solid #bfc9d1;
+    font-size: 1rem;
+    background: #f8fafc;
+    resize: vertical;
+}
+.data-form textarea {
+    min-height: 60px;
+}
+.data-form button {
+    background: #2980b9;
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 0.7rem;
+    transition: background 0.2s;
+}
+.data-form button:hover {
+    background: #1a5a85;
+}
+footer {
+    text-align: center;
+    color: #888;
+    margin-top: 2rem;
+    padding: 1rem 0;
+    font-size: 0.95rem;
+}
