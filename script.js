@@ -1,21 +1,23 @@
 // script.js
-// Envoie les données des formulaires au backend ExpressJS et gère l'affichage des données
+// Gère l'affichage des onglets, l'envoi des formulaires (CREATE), la récupération (READ) et l'affichage des données,
+// et les actions Modifier/Supprimer (concepts de base).
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Gestion des onglets
+    // --- Gestion des onglets ---
     const tabLinks = document.querySelectorAll('.tab-link');
     const tabContents = document.querySelectorAll('.tab-content');
+
     tabLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            // Retire la classe active de tous les onglets
-            tabLinks.forEach(l => l.classList.remove('active'));
-            // Ajoute la classe active à l'onglet cliqué
-            this.classList.add('active');
-            // Masque toutes les sections
-            tabContents.forEach(section => section.classList.remove('active'));
-            // Affiche la section correspondant à l'onglet
             const tabId = this.getAttribute('data-tab');
+
+            // Retire la classe active de tous les onglets et sections
+            tabLinks.forEach(l => l.classList.remove('active'));
+            tabContents.forEach(section => section.classList.remove('active'));
+
+            // Ajoute la classe active à l'onglet cliqué et à la section correspondante
+            this.classList.add('active');
             const targetSection = document.getElementById(tabId);
             if (targetSection) {
                 targetSection.classList.add('active');
@@ -47,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Préparer les données du formulaire
                 const data = {};
                 Array.from(form.elements).forEach(el => {
-                    // Inclure seulement les éléments avec un 'name' et une 'value' définie
+                    // Inclure seulement les éléments avec un 'name' et une 'value' définie (non vide)
                     if (el.name && el.value !== undefined && el.value !== '') {
                          // Tentative de conversion en nombre si le type est number
                          if (el.type === 'number') {
@@ -55,26 +57,31 @@ document.addEventListener('DOMContentLoaded', () => {
                          } else {
                              data[el.name] = el.value;
                          }
-                    } else if (el.name && (el.value === undefined || el.value === '')) {
-                         // Gérer les champs vides explicitement comme null si nécessaire pour la BD
-                         // Ou simplement ne pas les inclure dans le payload si le backend gère les valeurs manquantes
-                         // Pour l'instant, on les omet s'ils sont vides.
                     }
+                    // Les champs vides (pour les colonnes non requises) ne sont pas inclus dans 'data',
+                    // le backend devra gérer l'insertion de NULL pour les colonnes manquantes.
                 });
 
                 // Gérer les champs JSON : 'localisation' et 'position'
                 // Le backend s'attend à un objet JSON ou null
-                if (data.localisation) {
-                     try { data.localisation = JSON.parse(data.localisation); } catch (e) { console.error("JSON invalide pour localisation:", e); data.localisation = null; } // Envoyer null si JSON invalide
-                } else if (data.localisation === '') { // Si le champ était vide
-                    data.localisation = null;
-                }
-
-                 if (data.position) {
-                     try { data.position = JSON.parse(data.position); } catch (e) { console.error("JSON invalide pour position:", e); data.position = null; } // Envoyer null si JSON invalide
-                } else if (data.position === '') { // Si le champ était vide
-                    data.position = null;
-                }
+                const jsonFields = ['localisation', 'position']; // Liste des noms de champs JSON
+                jsonFields.forEach(fieldName => {
+                    if (data[fieldName] !== undefined) { // Si le champ existe dans les données collectées
+                        if (typeof data[fieldName] === 'string' && data[fieldName].trim() !== '') {
+                            try {
+                                data[fieldName] = JSON.parse(data[fieldName]);
+                            } catch (e) {
+                                console.error(`JSON invalide pour le champ '${fieldName}':`, data[fieldName], e);
+                                data[fieldName] = null; // Envoyer null si JSON invalide
+                                alert(`Attention: Le champ '${fieldName}' contient du JSON invalide et sera enregistré comme vide.`);
+                            }
+                        } else if (data[fieldName] === '') { // Si le champ était vide (chaîne vide)
+                             data[fieldName] = null; // Envoyer null pour les champs vides
+                        }
+                         // Si c'est déjà un objet, on le laisse tel quel
+                    }
+                     // Si le champ n'était même pas présent dans le formulaire ou était non rempli et non inclus, il ne sera pas dans 'data', ce qui est géré par le backend.
+                });
 
 
                 // Déterminer le point d'API cible basé sur l'ID du formulaire
@@ -90,7 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(res => {
                     if (!res.ok) {
                         // Tenter de lire l'erreur du backend si disponible
-                        return res.json().then(errJson => { throw new Error(errJson.error || `Erreur réseau, statut ${res.status}`); });
+                        return res.json().then(errJson => {
+                            // Afficher l'erreur spécifique du backend si elle existe, sinon une erreur générique
+                            throw new Error(errJson.error || `Erreur réseau, statut ${res.status}`);
+                        });
                     }
                     return res.json();
                 })
@@ -114,11 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchData(endpoint, listId) {
         const listElement = document.getElementById(listId);
         if (!listElement) return;
-        listElement.innerHTML = '<h3>Chargement...</h3>'; // Indicateur de chargement
+
+        listElement.innerHTML = '<h3>Chargement...</h3><p>Chargement des données en cours...</p>'; // Indicateur de chargement amélioré
 
         try {
-            // Adjusted endpoint mapping for 'villes' to 'ville' in the backend if needed,
-            // but for now, the frontend uses 'villes' endpoint and backend listens on '/api/villes' and maps to 'ville' table.
             const res = await fetch(`http://localhost:3000/api/${endpoint}`);
             if (!res.ok) {
                 throw new Error(`Erreur HTTP! statut: ${res.status}`);
@@ -127,17 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
             displayData(data, listElement, endpoint); // Afficher les données récupérées
         } catch (err) {
             console.error(`Erreur lors du chargement des données pour ${endpoint}:`, err);
-            listElement.innerHTML = `<h3>Erreur de chargement : ${err.message}</h3>`;
+             listElement.innerHTML = `<h3>Erreur de chargement</h3><p>Impossible de charger les données pour ${endpoint}. Détails : ${err.message}</p>`;
         }
     }
 
     // Fonction pour afficher les données dans un tableau
     function displayData(data, listElement, endpoint) {
-        listElement.innerHTML = `<h3>Liste des ${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)} (${data.length})</h3>`;
+        listElement.innerHTML = `<h3>Liste des ${endpoint.charAt(0).toUpperCase() + endpoint.slice(1).replace(/_/g, ' ')} (${data.length})</h3>`;
+
         if (data.length === 0) {
-            listElement.innerHTML += '<p>Aucune donnée disponible.</p>';
+            listElement.innerHTML += '<p class="no-data">Aucune donnée disponible.</p>';
             return;
         }
+
+        // Créer un conteneur pour le tableau afin de gérer le scroll
+        const tableContainer = document.createElement('div');
+        tableContainer.classList.add('table-container');
 
         // Créer un tableau
         const table = document.createElement('table');
@@ -146,12 +160,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const headerRow = thead.insertRow();
 
         // Créer les en-têtes à partir des clés du premier objet de données
-        // Exclure les champs 'created_at' et 'updated_at' de l'affichage si trop verbeux, ou les formater.
+        // Exclure les champs 'created_at' et 'updated_at' si vous ne voulez pas les afficher
         const keys = Object.keys(data[0]).filter(key => key !== 'created_at' && key !== 'updated_at');
 
         keys.forEach(key => {
             const th = document.createElement('th');
-            th.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); // Format snake_case to Title Case
+             // Tenter de rendre le snake_case plus lisible (ex: id_ville -> Id Ville)
+            th.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             headerRow.appendChild(th);
         });
          // Ajouter l'en-tête pour les Actions (Modifier/Supprimer)
@@ -164,28 +179,43 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = tbody.insertRow();
             keys.forEach(key => {
                 const cell = row.insertCell();
-                // Formatage basique pour les types complexes ou dates
-                 let cellContent = item[key];
+                let cellContent = item[key];
+                let isJsonCell = false; // Flag pour marquer les cellules JSON
+
+                // Formatage pour les types complexes ou dates
                  if (cellContent === null) {
                      cellContent = 'N/A'; // Afficher null comme N/A
                  } else if (typeof cellContent === 'object') {
-                     cellContent = JSON.stringify(cellContent, null, 2); // Afficher les objets JSON joliment formatés
-                 } else if ((key.includes('date'))) { // Format les champs dont le nom inclut 'date'
+                     cellContent = JSON.stringify(cellContent, null, 2); // Afficher les objets JSON joliment formatés avec indentation
+                     isJsonCell = true; // Marquer comme cellule JSON
+                 } else if (typeof cellContent === 'boolean') {
+                    cellContent = cellContent ? 'Oui' : 'Non'; // Afficher les booléens lisiblement
+                 }
+                 else if ((key.includes('date') || key.includes('_at')) && cellContent) { // Format les champs dont le nom inclut 'date' ou '_at'
                       try {
                         const dateObj = new Date(cellContent);
                         if (!isNaN(dateObj.getTime())) {
-                            cellContent = dateObj.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                            // Format simple YYYY-MM-DD, inclure heure si pertinent
+                             cellContent = dateObj.toISOString().split('T')[0];
+                             // If you want datetime: cellContent = dateObj.toLocaleString();
                         } else {
-                             cellContent = String(cellContent); // Fallback if date parsing fails
+                             cellContent = String(cellContent); // Fallback si le parsing de date échoue
                         }
                      } catch (e) {
                          cellContent = String(cellContent); // Fallback
                      }
                  } else {
-                     cellContent = String(cellContent); // Assurer que tout est une chaîne
+                     cellContent = String(cellContent); // Assurer que tout le reste est une chaîne
                  }
+
                 cell.textContent = cellContent;
+
+                // Ajouter la classe si c'est une cellule JSON
+                if (isJsonCell) {
+                    cell.classList.add('json-cell');
+                }
             });
+
              // Ajouter les boutons d'action (Modifier/Supprimer)
             const cellActions = row.insertCell();
             // IMPORTANT: Ensure your tables have an 'id' column as the primary key for this to work.
@@ -195,12 +225,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button onclick="editItem('${endpoint}', ${item.id})">Modifier</button>
                     <button onclick="deleteItem('${endpoint}', ${item.id})">Supprimer</button>
                  `;
+                 cellActions.style.minWidth = '160px'; // Minimum width for actions column
+                 cellActions.style.maxWidth = '160px'; // Fixed width for actions column
+                 cellActions.style.overflow = 'visible'; // Ensure buttons are not hidden
+                 cellActions.style.whiteSpace = 'nowrap'; // Ensure buttons stay on one line
             } else {
-                cellActions.textContent = 'Pas d\'ID pour CRUD'; // Message if item has no ID
+                cellActions.textContent = 'Pas d\'ID'; // Message si item n'a pas d'ID
+                 cellActions.style.minWidth = '80px';
+                 cellActions.style.maxWidth = '80px';
             }
         });
 
-        listElement.appendChild(table);
+        // Ajouter le tableau à son conteneur, puis le conteneur à l'élément de liste
+        tableContainer.appendChild(table);
+        listElement.appendChild(tableContainer);
     }
 
     // --- Initialisation ---
@@ -212,40 +250,48 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchData(tabId, `list-${tabId}`);
     }
 
-    // --- CRUD (Update/Delete implementations) ---
+    // --- CRUD (Update/Delete implementations - Basic Placeholder) ---
 
     // Implémentation de la fonctionnalité Modifier
     // Cette fonction devrait idéalement récupérer les données de l'élément et pré-remplir le formulaire pour l'édition
     // NOTE : Pour une application complète, il faudrait un formulaire dédié ou modifier l'existant dynamiquement pour l'édition.
-    // Pour cet exemple, nous affichons simplement un message.
+    // Pour cet exemple, nous affichons simplement un message et loggons les données.
     window.editItem = async (endpoint, itemId) => {
         alert(`Fonctionnalité "Modifier" pour l'élément ${itemId} de ${endpoint} à implémenter.`);
         console.log(`Tentative de modification de l'élément ${itemId} de ${endpoint}`);
         // Exemple: Récupérer les données de l'élément pour pré-remplir un formulaire d'édition
-        // try {
-        //     const res = await fetch(`http://localhost:3000/api/${endpoint}/${itemId}`);
-        //     if (!res.ok) throw new Error(`Élément ${itemId} non trouvé.`);
-        //     const itemData = await res.json();
-        //     console.log("Données pour édition:", itemData);
-        //     // Ici, vous implémenteriez la logique pour trouver le bon formulaire et le remplir
-        //     // avec itemData, et changer son action pour envoyer un PUT au lieu de POST.
-        //     // Cela nécessite une logique plus complexe que ce simple script.
-        // } catch (err) {
-        //     console.error(`Erreur lors du chargement pour modification de ${endpoint}/${itemId}:`, err);
-        //     alert(`Erreur lors du chargement des données pour modification: ${err.message}`);
-        // }
+        try {
+             // Endpoint au singulier si le backend utilise /api/ville/:id
+            const itemEndpoint = endpoint.endsWith('s') ? endpoint.slice(0, -1) : endpoint; // Rough heuristic for singular endpoint
+            const res = await fetch(`http://localhost:3000/api/${itemEndpoint}s/${itemId}`); // Using plural for backend consistency
+            if (!res.ok) throw new Error(`Élément ${itemId} non trouvé. Statut: ${res.status}`);
+            const itemData = await res.json();
+            console.log("Données pour édition:", itemData);
+            // TODO: Implémenter ici la logique pour trouver le bon formulaire (`form-${endpoint}`),
+            // le remplir avec `itemData`, et changer son écouteur d'événement
+            // pour envoyer un PUT au lieu de POST au point d'API `/api/${itemEndpoint}s/${itemId}`.
+            // Cela nécessite une logique plus complexe.
+        } catch (err) {
+            console.error(`Erreur lors du chargement pour modification de ${endpoint}/${itemId}:`, err);
+            alert(`Erreur lors du chargement des données pour modification: ${err.message}`);
+        }
     };
 
     // Implémentation de la fonctionnalité Supprimer
     window.deleteItem = async (endpoint, itemId) => {
-        if (confirm(`Êtes-vous sûr de vouloir supprimer l'élément ${itemId} de ${endpoint} ?`)) {
+        if (confirm(`Êtes-vous sûr de vouloir supprimer l'élément ${itemId} de ${endpoint} ?\nCette action est irréversible.`)) {
             try {
-                const res = await fetch(`http://localhost:3000/api/${endpoint}/${itemId}`, {
+                 // Endpoint au singulier si le backend utilise /api/ville/:id
+                const itemEndpoint = endpoint.endsWith('s') ? endpoint.slice(0, -1) : endpoint; // Rough heuristic for singular endpoint
+                const res = await fetch(`http://localhost:3000/api/${itemEndpoint}s/${itemId}`, { // Using plural for backend consistency
                     method: 'DELETE',
                 });
                 if (!res.ok) {
                      // Tenter de lire l'erreur du backend si disponible
-                    return res.json().then(errJson => { throw new Error(errJson.error || `Erreur réseau, statut ${res.status}`); });
+                    return res.json().then(errJson => {
+                        // Afficher l'erreur spécifique du backend (comme une violation de clé étrangère)
+                        throw new Error(errJson.error || `Erreur réseau lors de la suppression, statut ${res.status}`);
+                    });
                 }
                 // La suppression a réussi
                 alert('Élément supprimé avec succès !');
@@ -261,8 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
      // --- Fonctionnalités Avancées (Non implémentées dans cet exemple simple) ---
      // Pour une application complète, il faudrait:
      // 1. Récupérer les données des tables de référence (e.g., /api/type_revetement)
-     // 2. Peupler les <select> dans les formulaires avec ces données.
-     // 3. Implémenter les routes GET par ID, PUT et DELETE pour TOUTES les entités principales.
+     // 2. Peupler les <select> dans les formulaires avec ces données via JavaScript.
+     // 3. Implémenter les routes GET par ID, PUT et DELETE pour TOUTES les entités principales dans le backend.
      // 4. Gérer l'édition en chargeant les données de l'élément dans le formulaire d'ajout (qui deviendrait un formulaire d'édition) ou dans un formulaire séparé/modal.
      // 5. Gérer les relations N-N (tables de jointure) via des formulaires et endpoints dédiés.
 });
