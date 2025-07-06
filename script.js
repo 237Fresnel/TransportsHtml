@@ -254,23 +254,139 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Implémentation de la fonctionnalité Modifier
     // Cette fonction devrait idéalement récupérer les données de l'élément et pré-remplir le formulaire pour l'édition
-    // NOTE : Pour une application complète, il faudrait un formulaire dédié ou modifier l'existant dynamiquement pour l'édition.
-    // Pour cet exemple, nous affichons simplement un message et loggons les données.
     window.editItem = async (endpoint, itemId) => {
-        alert(`Fonctionnalité "Modifier" pour l'élément ${itemId} de ${endpoint} à implémenter.`);
-        console.log(`Tentative de modification de l'élément ${itemId} de ${endpoint}`);
-        // Exemple: Récupérer les données de l'élément pour pré-remplir un formulaire d'édition
+        console.log(`Modification de l'élément ${itemId} de ${endpoint}`);
         try {
-             // Endpoint au singulier si le backend utilise /api/ville/:id
-            const itemEndpoint = endpoint.endsWith('s') ? endpoint.slice(0, -1) : endpoint; // Rough heuristic for singular endpoint
-            const res = await fetch(`http://localhost:3000/api/${itemEndpoint}s/${itemId}`); // Using plural for backend consistency
+            // Endpoint au singulier si le backend utilise /api/ville/:id
+            const itemEndpoint = endpoint.endsWith('s') ? endpoint.slice(0, -1) : endpoint;
+            const res = await fetch(`http://localhost:3000/api/${itemEndpoint}s/${itemId}`);
             if (!res.ok) throw new Error(`Élément ${itemId} non trouvé. Statut: ${res.status}`);
             const itemData = await res.json();
             console.log("Données pour édition:", itemData);
-            // TODO: Implémenter ici la logique pour trouver le bon formulaire (`form-${endpoint}`),
-            // le remplir avec `itemData`, et changer son écouteur d'événement
-            // pour envoyer un PUT au lieu de POST au point d'API `/api/${itemEndpoint}s/${itemId}`.
-            // Cela nécessite une logique plus complexe.
+            
+            // Trouver le formulaire correspondant
+            const formId = `form-${endpoint}`;
+            const form = document.getElementById(formId);
+            
+            if (!form) {
+                throw new Error(`Formulaire ${formId} non trouvé.`);
+            }
+
+            // Pré-remplir le formulaire avec les données existantes
+            Object.keys(itemData).forEach(key => {
+                const input = form.elements[key];
+                if (input) {
+                    // Gérer les différents types d'entrées
+                    if (input.type === 'textarea' || input.tagName.toLowerCase() === 'textarea') {
+                        // Pour les champs JSON (localisation, position), formater en JSON string
+                        if (typeof itemData[key] === 'object' && itemData[key] !== null) {
+                            input.value = JSON.stringify(itemData[key], null, 2);
+                        } else {
+                            input.value = itemData[key] || '';
+                        }
+                    } else if (input.type === 'date' && itemData[key]) {
+                        // Formater les dates pour les inputs de type date (YYYY-MM-DD)
+                        const dateValue = new Date(itemData[key]);
+                        if (!isNaN(dateValue.getTime())) {
+                            input.value = dateValue.toISOString().split('T')[0];
+                        }
+                    } else {
+                        // Autres types d'entrées (text, number, etc.)
+                        input.value = itemData[key] !== null ? itemData[key] : '';
+                    }
+                }
+            });
+
+            // Changer le libellé du bouton de soumission
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Mettre à jour';
+                submitBtn.dataset.originalText = 'Ajouter'; // Enregistrer le texte d'origine
+            }
+
+            // Faire défiler jusqu'au formulaire et lui donner le focus
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Ajouter une classe de surbrillance temporaire pour attirer l'attention
+            form.classList.add('edit-mode');
+            
+            // Stocker l'ID de l'élément à modifier dans un attribut data du formulaire
+            form.dataset.editItemId = itemId;
+            form.dataset.editMode = "true";
+            
+            // Supprimer les anciens gestionnaires d'événements sur le formulaire
+            const clonedForm = form.cloneNode(true);
+            form.parentNode.replaceChild(clonedForm, form);
+            
+            // Ajouter un nouveau gestionnaire d'événements au formulaire cloné
+            clonedForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log("Formulaire de modification soumis pour l'ID:", itemId);
+                
+                // Préparer les données du formulaire
+                const data = {};
+                Array.from(clonedForm.elements).forEach(el => {
+                    if (el.name && el.value !== undefined && el.value !== '') {
+                        if (el.type === 'number') {
+                            data[el.name] = Number(el.value);
+                        } else {
+                            data[el.name] = el.value;
+                        }
+                    }
+                });
+
+                // Gérer les champs JSON : 'localisation' et 'position'
+                const jsonFields = ['localisation', 'position'];
+                jsonFields.forEach(fieldName => {
+                    if (data[fieldName] !== undefined) {
+                        if (typeof data[fieldName] === 'string' && data[fieldName].trim() !== '') {
+                            try {
+                                data[fieldName] = JSON.parse(data[fieldName]);
+                            } catch (e) {
+                                console.error(`JSON invalide pour le champ '${fieldName}':`, data[fieldName], e);
+                                data[fieldName] = null;
+                                alert(`Attention: Le champ '${fieldName}' contient du JSON invalide et sera enregistré comme vide.`);
+                            }
+                        } else if (data[fieldName] === '') {
+                            data[fieldName] = null;
+                        }
+                    }
+                });
+
+                try {
+                    console.log("Envoi de la requête PUT avec les données:", data);
+                    // Envoyer la requête PUT au backend pour mettre à jour les données
+                    const updateRes = await fetch(`http://localhost:3000/api/${itemEndpoint}s/${itemId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!updateRes.ok) {
+                        // Tenter de lire l'erreur du backend si disponible
+                        const errJson = await updateRes.json();
+                        throw new Error(errJson.error || `Erreur lors de la mise à jour, statut ${updateRes.status}`);
+                    }
+
+                    const result = await updateRes.json();
+                    alert('Succès: ' + (result.message || 'Données mises à jour !'));
+                    
+                    // Recharger la liste des données après mise à jour
+                    fetchData(endpoint, `list-${endpoint}`);
+                    
+                    // Réinitialiser la page pour rétablir les formulaires
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                    
+                } catch (err) {
+                    console.error(`Erreur lors de la mise à jour des données pour ${endpoint}/${itemId}:`, err);
+                    alert('Erreur lors de la mise à jour: ' + err.message);
+                }
+            });
+            
         } catch (err) {
             console.error(`Erreur lors du chargement pour modification de ${endpoint}/${itemId}:`, err);
             alert(`Erreur lors du chargement des données pour modification: ${err.message}`);
