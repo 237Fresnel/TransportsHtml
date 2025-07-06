@@ -233,7 +233,55 @@ app.get('/api/routes', async (req, res) => { // Read All Routes
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/routes/:id, PUT /api/routes/:id, DELETE /api/routes/:id similarly
+app.get('/api/routes/:id', async (req, res) => { // Read Single Route
+    try {
+        const { id } = req.params;
+        const data = await getDataById('route', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Route non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/routes/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/routes/:id', async (req, res) => { // Update Route
+    try {
+        const { id } = req.params;
+        const routeData = req.body;
+        const row = await updateData('route', id, routeData);
+        if (row) {
+            res.json({ message: 'Route mise à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Route non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/routes/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/routes/:id', async (req, res) => { // Delete Route
+    try {
+        const { id } = req.params;
+        const success = await deleteData('route', id);
+        if (success) {
+            res.json({ message: 'Route supprimée' });
+        } else {
+            res.status(404).json({ message: 'Route non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/routes/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer cette route car elle est liée à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Projet
 app.post('/api/projets', async (req, res) => { // Create Projet
@@ -259,7 +307,55 @@ app.get('/api/projets', async (req, res) => { // Read All Projets
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/projets/:id, PUT /api/projets/:id, DELETE /api/projets/:id similarly
+app.get('/api/projets/:id', async (req, res) => { // Read Single Projet
+    try {
+        const { id } = req.params;
+        const data = await getDataById('projet', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Projet non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/projets/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/projets/:id', async (req, res) => { // Update Projet
+    try {
+        const { id } = req.params;
+        const projetData = req.body;
+        const row = await updateData('projet', id, projetData);
+        if (row) {
+            res.json({ message: 'Projet mis à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Projet non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/projets/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/projets/:id', async (req, res) => { // Delete Projet
+    try {
+        const { id } = req.params;
+        const success = await deleteData('projet', id);
+        if (success) {
+            res.json({ message: 'Projet supprimé' });
+        } else {
+            res.status(404).json({ message: 'Projet non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/projets/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer ce projet car il est lié à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Vehicule (from old 'flotte')
 app.post('/api/vehicules', async (req, res) => { // Create Vehicule
@@ -285,7 +381,55 @@ app.get('/api/vehicules', async (req, res) => { // Read All Vehicules
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/vehicules/:id, PUT /api/vehicules/:id, DELETE /api/vehicules/:id similarly
+app.get('/api/vehicules/:id', async (req, res) => { // Read Single Vehicule
+    try {
+        const { id } = req.params;
+        const data = await getDataById('vehicule', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Véhicule non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/vehicules/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/vehicules/:id', async (req, res) => { // Update Vehicule
+    try {
+        const { id } = req.params;
+        const vehiculeData = req.body;
+        const row = await updateData('vehicule', id, vehiculeData);
+        if (row) {
+            res.json({ message: 'Véhicule mis à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Véhicule non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/vehicules/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/vehicules/:id', async (req, res) => { // Delete Vehicule
+    try {
+        const { id } = req.params;
+        const success = await deleteData('vehicule', id);
+        if (success) {
+            res.json({ message: 'Véhicule supprimé' });
+        } else {
+            res.status(404).json({ message: 'Véhicule non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/vehicules/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer ce véhicule car il est lié à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Accident
 app.post('/api/accidents', async (req, res) => { // Create Accident
@@ -309,7 +453,55 @@ app.get('/api/accidents', async (req, res) => { // Read All Accidents
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/accidents/:id, PUT /api/accidents/:id, DELETE /api/accidents/:id similarly
+app.get('/api/accidents/:id', async (req, res) => { // Read Single Accident
+    try {
+        const { id } = req.params;
+        const data = await getDataById('accident', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Accident non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/accidents/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/accidents/:id', async (req, res) => { // Update Accident
+    try {
+        const { id } = req.params;
+        const accidentData = req.body;
+        const row = await updateData('accident', id, accidentData);
+        if (row) {
+            res.json({ message: 'Accident mis à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Accident non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/accidents/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/accidents/:id', async (req, res) => { // Delete Accident
+    try {
+        const { id } = req.params;
+        const success = await deleteData('accident', id);
+        if (success) {
+            res.json({ message: 'Accident supprimé' });
+        } else {
+            res.status(404).json({ message: 'Accident non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/accidents/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer cet accident car il est lié à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Gare
 app.post('/api/gares', async (req, res) => { // Create Gare
@@ -338,7 +530,60 @@ app.get('/api/gares', async (req, res) => { // Read All Gares
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/gares/:id, PUT /api/gares/:id, DELETE /api/gares/:id similarly
+app.get('/api/gares/:id', async (req, res) => { // Read Single Gare
+    try {
+        const { id } = req.params;
+        const data = await getDataById('gare', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Gare non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/gares/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/gares/:id', async (req, res) => { // Update Gare
+    try {
+        const { id } = req.params;
+        const gareData = req.body;
+        // Handle JSON for position
+        if (typeof gareData.position === 'string' && gareData.position.trim() !== '') {
+            try { gareData.position = JSON.parse(gareData.position); } catch (e) { console.warn("Invalid JSON for gare position:", gareData.position, e); gareData.position = null; }
+        } else if (typeof gareData.position !== 'object') { gareData.position = null; }
+        
+        const row = await updateData('gare', id, gareData);
+        if (row) {
+            res.json({ message: 'Gare mise à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Gare non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/gares/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/gares/:id', async (req, res) => { // Delete Gare
+    try {
+        const { id } = req.params;
+        const success = await deleteData('gare', id);
+        if (success) {
+            res.json({ message: 'Gare supprimée' });
+        } else {
+            res.status(404).json({ message: 'Gare non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/gares/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer cette gare car elle est liée à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Aire_Repos
 app.post('/api/aires_repos', async (req, res) => { // Create Aire_Repos
@@ -367,7 +612,60 @@ app.get('/api/aires_repos', async (req, res) => { // Read All Aires_Repos
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/aires_repos/:id, PUT /api/aires_repos/:id, DELETE /api/aires_repos/:id similarly
+app.get('/api/aires_repos/:id', async (req, res) => { // Read Single Aire_Repos
+    try {
+        const { id } = req.params;
+        const data = await getDataById('aire_repos', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Aire de repos non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/aires_repos/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/aires_repos/:id', async (req, res) => { // Update Aire_Repos
+    try {
+        const { id } = req.params;
+        const aireReposData = req.body;
+        // Handle JSON for localisation
+        if (typeof aireReposData.localisation === 'string' && aireReposData.localisation.trim() !== '') {
+            try { aireReposData.localisation = JSON.parse(aireReposData.localisation); } catch (e) { console.warn("Invalid JSON for aire_repos localisation:", aireReposData.localisation, e); aireReposData.localisation = null; }
+        } else if (typeof aireReposData.localisation !== 'object') { aireReposData.localisation = null; }
+        
+        const row = await updateData('aire_repos', id, aireReposData);
+        if (row) {
+            res.json({ message: 'Aire de repos mise à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Aire de repos non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/aires_repos/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/aires_repos/:id', async (req, res) => { // Delete Aire_Repos
+    try {
+        const { id } = req.params;
+        const success = await deleteData('aire_repos', id);
+        if (success) {
+            res.json({ message: 'Aire de repos supprimée' });
+        } else {
+            res.status(404).json({ message: 'Aire de repos non trouvée' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/aires_repos/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer cette aire de repos car elle est liée à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Pont
 app.post('/api/ponts', async (req, res) => { // Create Pont
@@ -396,7 +694,60 @@ app.get('/api/ponts', async (req, res) => { // Read All Ponts
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/ponts/:id, PUT /api/ponts/:id, DELETE /api/ponts/:id similarly
+app.get('/api/ponts/:id', async (req, res) => { // Read Single Pont
+    try {
+        const { id } = req.params;
+        const data = await getDataById('pont', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Pont non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/ponts/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/ponts/:id', async (req, res) => { // Update Pont
+    try {
+        const { id } = req.params;
+        const pontData = req.body;
+        // Handle JSON for position
+        if (typeof pontData.position === 'string' && pontData.position.trim() !== '') {
+            try { pontData.position = JSON.parse(pontData.position); } catch (e) { console.warn("Invalid JSON for pont position:", pontData.position, e); pontData.position = null; }
+        } else if (typeof pontData.position !== 'object') { pontData.position = null; }
+        
+        const row = await updateData('pont', id, pontData);
+        if (row) {
+            res.json({ message: 'Pont mis à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Pont non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/ponts/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/ponts/:id', async (req, res) => { // Delete Pont
+    try {
+        const { id } = req.params;
+        const success = await deleteData('pont', id);
+        if (success) {
+            res.json({ message: 'Pont supprimé' });
+        } else {
+            res.status(404).json({ message: 'Pont non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/ponts/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer ce pont car il est lié à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Centroide
 app.post('/api/centroides', async (req, res) => { // Create Centroide
@@ -422,7 +773,60 @@ app.get('/api/centroides', async (req, res) => { // Read All Centroides
         res.status(500).json({ error: err.message });
     }
 });
-// Add GET /api/centroides/:id, PUT /api/centroides/:id, DELETE /api/centroides/:id similarly
+app.get('/api/centroides/:id', async (req, res) => { // Read Single Centroide
+    try {
+        const { id } = req.params;
+        const data = await getDataById('centroide', id);
+        if (data) {
+            res.json(data);
+        } else {
+            res.status(404).json({ message: 'Centroïde non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR GET /api/centroides/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/centroides/:id', async (req, res) => { // Update Centroide
+    try {
+        const { id } = req.params;
+        const centroideData = req.body;
+        // Handle JSON for localisation
+        if (typeof centroideData.localisation === 'string' && centroideData.localisation.trim() !== '') {
+            try { centroideData.localisation = JSON.parse(centroideData.localisation); } catch (e) { console.warn("Invalid JSON for centroide localisation:", centroideData.localisation, e); centroideData.localisation = null; }
+        } else if (typeof centroideData.localisation !== 'object') { centroideData.localisation = null; }
+        
+        const row = await updateData('centroide', id, centroideData);
+        if (row) {
+            res.json({ message: 'Centroïde mis à jour', data: row });
+        } else {
+            res.status(404).json({ message: 'Centroïde non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR PUT /api/centroides/:id:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/centroides/:id', async (req, res) => { // Delete Centroide
+    try {
+        const { id } = req.params;
+        const success = await deleteData('centroide', id);
+        if (success) {
+            res.json({ message: 'Centroïde supprimé' });
+        } else {
+            res.status(404).json({ message: 'Centroïde non trouvé' });
+        }
+    } catch (err) {
+        console.error("ERREUR DELETE /api/centroides/:id:", err);
+        if (err.code === '23503') { // Foreign key violation error code
+            res.status(400).json({ error: 'Impossible de supprimer ce centroïde car il est lié à d\'autres données.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
 
 // Note: For the many-to-many tables (signalisation_route, projet_ville, etc.),
 // you would need dedicated endpoints (e.g., POST /api/projet_ville to link a project to a city)
