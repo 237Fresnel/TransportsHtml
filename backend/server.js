@@ -1,6 +1,7 @@
 // Backend ExpressJS pour recevoir les données et les insérer dans PostgreSQL 'transports' database
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 const { Pool } = require('pg');
 
 const app = express();
@@ -20,14 +21,12 @@ app.use(express.json()); // Middleware pour parser le JSON des requêtes
 
 // Connexion à PostgreSQL
 const pool = new Pool({
-    user: 'postgres', // à adapter si besoin
-    host: 'localhost',
-    database: 'trip',
-    // password: 'votre_mot_de_passe', // Décommentez et mettez votre mot de passe si besoin
-    // Si aucun mot de passe, laissez la ligne ci-dessous (ou commentez la ligne password: null)
-   // password: null,
-    port: 5432,
-});
+    user: process.env.PGUSER,
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    password: process.env.PGPASSWORD,
+    port: process.env.PGPORT,
+  });
 
 // Vérification de la connexion à la base de données au démarrage du serveur
 pool.connect((err, client, release) => {
